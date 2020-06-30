@@ -1,12 +1,10 @@
-ResourceContainers | where type=='microsoft.resources/subscriptions'
-| union  
-Resources 
-| where type=="microsoft.compute/virtualmachines"
-| project subscriptionId,subscriptionName=name,resourceGroup,type,location,vmsize=properties.hardwareProfile.vmSize,
+Resources
+| join kind=leftouter (ResourceContainers | where type=='microsoft.resources/subscriptions' | project subscriptionName=name, subscriptionId) on subscriptionId
+| where type == 'microsoft.compute/virtualmachines'
+| project subscriptionId,subscriptionName,resourceGroup,name,type,location,vmsize=properties.hardwareProfile.vmSize,
 osType=properties.storageProfile.osDisk.osType,
 publisher=properties.storageProfile.imageReference.publisher,offer=properties.storageProfile.imageReference.offer,
 sku=properties.storageProfile.imageReference.sku,
 osDisksizeInGB=properties.storageProfile.osDisk.diskSizeGB,
 dataDisksizeInGB=properties.storageProfile.dataDisks[0].diskSizeGB
 | sort by subscriptionId 
-

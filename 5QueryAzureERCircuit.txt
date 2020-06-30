@@ -1,0 +1,12 @@
+Resources
+| join kind=leftouter (ResourceContainers | where type=='microsoft.resources/subscriptions' | project subscriptionName=name, subscriptionId) on subscriptionId
+| where type=="microsoft.network/expressroutecircuits"
+| project subscriptionId,subscriptionName,resourceGroup,name,kind,location,
+skuName=sku.name,skuTier=sku.tier,skuFamily=sku.family,
+ProvisioningState=properties.serviceProviderProvisioningState,
+serviceProviderName=properties.serviceProviderProperties.serviceProviderName,
+bandwidthInMbps=properties.serviceProviderProperties.bandwidthInMbps,
+peeringLocation=properties.serviceProviderProperties.peeringLocation,
+primaryPeerAddressPrefix=properties.peerings[0].properties.primaryPeerAddressPrefix,
+secondaryPeerAddressPrefix=properties.peerings[0].properties.secondaryPeerAddressPrefix
+| sort by subscriptionId

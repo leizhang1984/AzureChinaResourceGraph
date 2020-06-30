@@ -1,0 +1,6 @@
+Resources
+| join kind=leftouter (ResourceContainers | where type=='microsoft.resources/subscriptions' | project subscriptionName=name, subscriptionId) on subscriptionId
+| where type=="microsoft.keyvault/vaults"
+| project subscriptionId,subscriptionName,resourceGroup,name,location,
+skuname=properties.sku.name,skufamily=properties.sku.family
+| sort by subscriptionId 

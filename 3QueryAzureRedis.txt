@@ -1,0 +1,9 @@
+Resources
+| join kind=leftouter (ResourceContainers | where type=='microsoft.resources/subscriptions' | project subscriptionName=name, subscriptionId) on subscriptionId
+| where type == "microsoft.cache/redis" 
+| project subscriptionId,subscriptionName,resourceGroup,name,location,
+hostname=properties.hostName,skufamily=properties.sku.name,
+capacity=properties.sku.capacity,
+enableNonSslPort=properties.enableNonSslPort,
+staticIP=properties.staticIP
+| sort by subscriptionId 
