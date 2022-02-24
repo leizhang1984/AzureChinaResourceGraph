@@ -1,5 +1,5 @@
 AzureNetworkAnalytics_CL
-| where SubType_s == "FlowLog"
-and SrcIP_s =='10.0.0.5' and DestIP_s =='10.0.0.4' and DestPort_d =='5001'
-| project FlowDirection_s, FlowType_s, FlowCount = max_of(AllowedInFlows_d + DeniedInFlows_d, AllowedOutFlows_d + DeniedOutFlows_d), AllowedInFlows_d, DeniedInFlows_d, AllowedOutFlows_d, DeniedOutFlows_d, InboundBytes_d, OutboundBytes_d, InboundPackets_d, OutboundPackets_d, SrcIP_s, DestIP_s, SrcPublicIPs_s, DestPublicIPs_s, L4Protocol_s, L7Protocol_s, DestPort_d, NIC1_s, NIC2_s, VM1_s, VM2_s, Subnet1_s, Subnet2_s, Country_s, Region1_s, Region2_s, Subscription1_g, Subscription2_g, NSGRule_s, NSGList_s, TimeGenerated, TimeProcessed_t
-| summarize sum(InboundBytes_d), sum(OutboundBytes_d) by TimeProcessed_t
+| where NSGList_s contains "temp-nsg" and FASchemaVersion_s == '2' 
+and NSGRule_s =="allowvnetoutbound"
+| project FlowStartTime_t, NSGRule_s, SrcIP_s, DestIP_s, DestPort_d, VM1_s, VM2_s, Subnet1_s, Subnet2_s, Country_s, SrcPublicIPs_s, DestPublicIPs_s, InboundBytes_d, OutboundBytes_d, InboundPackets_d, OutboundPackets_d, TimeGenerated
+| summarize outbound= sum(OutboundBytes_d),inbound=sum(InboundBytes_d)
