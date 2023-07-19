@@ -1,0 +1,23 @@
+Resources
+| where type == 'microsoft.storage/storageaccounts'
+| project subscriptionId, name, publicNetworkAccess1 = properties.publicNetworkAccess, subnet=properties.networkAcls.virtualNetworkRules, aclip=properties.networkAcls.ipRules
+| extend publicNetworkAccess = iff(isnull(publicNetworkAccess1) and strlen(aclip)==2, "Disabled", publicNetworkAccess1)
+| mv-expand subnet
+| project subscriptionId, name, publicNetworkAccess, subnetid = tostring(subnet.id), aclip
+| union
+(
+Resources
+| where type == 'microsoft.storage/storageaccounts'
+| project subscriptionId, name, publicNetworkAccess1 = properties.publicNetworkAccess, subnet=properties.networkAcls.virtualNetworkRules, aclip=properties.networkAcls.ipRules
+| extend publicNetworkAccess = iff(isnull(publicNetworkAccess1) and strlen(aclip)==2, "Disabled", publicNetworkAccess1)
+| project subscriptionId, name, publicNetworkAccess, subnetid = tostring(subnet.id), aclip
+)
+| join kind=leftouter   (
+resources
+| where type == "microsoft.network/virtualnetworks"
+| project subscriptionId, vnetname=id, subnetname1 = properties.subnets
+| mv-expand subnetname1
+| project subscriptionId, subnetname1, subnetname= subnetname1.name, subnetid=tostring(subnetname1.id), subnetcidr = subnetname1.properties.addressPrefix
+) on $left.subnetid == $right.subnetid
+| project subscriptionId, name,publicNetworkAccess,subnetname,subnetid,subnetcidr, aclip
+| where subscriptionId in~ ('')

@@ -1,0 +1,19 @@
+resources
+| where type == "microsoft.compute/virtualmachines"
+| mv-expand SKU = properties.hardwareProfile.vmSize
+| extend Status = tostring(properties.provisioningState)
+| where Status == "Succeeded"
+| summarize counts = count() by subscriptionId, tostring(SKU), tostring(location), tostring(zones)
+| extend SKU_vCPUs = toint(extract(@"\d+", 0, SKU))
+| extend total_vCPUs= SKU_vCPUs * counts
+| extend sources = "VM"
+| union
+(resources
+| extend SKU = tostring(sku.name)
+| extend count = sku.capacity
+| where type == "microsoft.compute/virtualmachinescalesets"
+| summarize counts = sum(toint(['count'])) by subscriptionId, SKU, tostring(location), tostring(zones)
+| extend SKU_vCPUs = toint(extract(@"\d+", 0, SKU))
+| extend total_vCPUs = SKU_vCPUs * counts
+| project subscriptionId, SKU, SKU_vCPUs, counts, total_vCPUs, sources = "VMSS", tostring(location), tostring(zones))
+| summarize vmcount = sum(counts), vCPUcounts = sum(total_vCPUs) by subscriptionId, sources, location, zones
