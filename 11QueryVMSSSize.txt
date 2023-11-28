@@ -1,0 +1,4 @@
+Resources
+| join kind=leftouter (ResourceContainers | where type=='microsoft.resources/subscriptions' | project subscriptionName=name, subscriptionId) on subscriptionId
+| where type == 'microsoft.compute/virtualmachinescalesets'
+| project subscriptionId, subscriptionName, resourceGroup, VMSSName=name, Instance=sku.capacity, Size=sku.name, location, status=properties.provisioningState

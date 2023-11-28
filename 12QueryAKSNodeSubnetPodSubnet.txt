@@ -1,0 +1,53 @@
+Resources
+| join kind=leftouter (
+ResourceContainers | where type=='microsoft.resources/subscriptions' | project subscriptionName=name, subscriptionId
+) on subscriptionId
+| where type == 'microsoft.containerservice/managedclusters'
+| mv-expand record = properties.agentPoolProfiles
+| project //subscriptionId, 
+subscriptionName, resourceGroup, aksname = name, 
+
+vnetname= split(split(record.vnetSubnetID, "virtualNetworks/")[1],"/subnets/")[0],
+//vnetname = split(split(properties.agentPoolProfiles[0].vnetSubnetID, "virtualNetworks/")[1],"/subnets/")[0],
+agentpoolname =  record.name,
+nodesubnet = split(record.vnetSubnetID, "subnets/")[1],
+nodecount = toint(record.["count"]),
+nodevmSize = record.vmSize,
+podsubnet = split(record.podSubnetID, "subnets/")[1]
+//,record
+| extend nodesinglevmCore = case(nodevmSize == 'Standard_D16ds_v5', "16", 
+                                    nodevmSize == 'standard_D4s_v5', "4", 
+                                    nodevmSize == 'Standard_E16ds_v5', "16", 
+                                    nodevmSize == 'Standard_D16s_v5', "16", 
+                                    nodevmSize == 'Standard_D64s_v5', "64", 
+
+                                    nodevmSize == 'Standard_E16s_v5', "16", 
+                                    nodevmSize == 'Standard_D96s_v5', "96", 
+                                    nodevmSize == 'Standard_D32s_v5', "32", 
+                                    nodevmSize == 'Standard_E32s_v5', "32", 
+                                    nodevmSize == 'Standard_F16s_v2', "16", 
+
+                                    nodevmSize == 'Standard_NC16as_T4_v3', "16", 
+                                    nodevmSize == 'Standard_NC6s_v3', "6", 
+                                    nodevmSize == 'Standard_DS2_v2', "2", 
+                                    nodevmSize == 'Standard_D8s_v5', "8", 
+                                    nodevmSize == 'Standard_D8s_v3', "8", 
+
+                                    nodevmSize == 'Standard_E64ds_v5', "64", 
+                                    nodevmSize == 'Standard_NC24s_v3', "24", 
+                                    nodevmSize == 'Standard_NC96ads_A100_v4', "96", 
+                                    nodevmSize == 'Standard_NV36ads_A10_v5', "36", 
+                                    nodevmSize == 'Standard_D96ds_v5', "96", 
+
+                                    nodevmSize == 'Standard_NC12s_v3', "12", 
+                                    nodevmSize == 'Standard_D64ds_v5', "64", 
+                                    nodevmSize == 'Standard_E64s_v5', "64", 
+                                    nodevmSize == 'standard_D8s_v5', "8", 
+                                    nodevmSize == 'Standard_D4s_v5', "4", 
+                       "other")
+
+//| summarize sum(nodecount) by tostring(vnetname), tostring(nodesubnet), tostring(nodevmSize), tostring(nodesinglevmCore)
+| summarize totalnodeCount = sum(nodecount) by tostring(vnetname), tostring(nodesubnet), tostring(nodesinglevmCore)
+| extend totalnodeCore = toint(totalnodeCount) * toint(nodesinglevmCore)
+
+//| order by subscriptionName
