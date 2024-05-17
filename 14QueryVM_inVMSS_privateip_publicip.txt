@@ -1,0 +1,19 @@
+Resources
+    | where type =~ 'microsoft.compute/virtualmachines'
+    | project vmId = tolower(tostring(id)), vmName = name, vmssid=properties.virtualMachineScaleSet.id
+    | where isnotnull(vmssid)
+    | project vmId, vmName, vmssname = split(vmssid,"virtualMachineScaleSets/")[1]
+    | join (Resources
+        | where type =~ 'microsoft.network/networkinterfaces'
+        | mv-expand ipconfig=properties.ipConfigurations
+        | project vmId = tolower(tostring(properties.virtualMachine.id)), privateIp = ipconfig.properties.privateIPAddress, publicIpId = tostring(ipconfig.properties.publicIPAddress.id)
+        | join kind=leftouter (Resources
+            | where type =~ 'microsoft.network/publicipaddresses'
+            | project publicIpId = id, publicIp = properties.ipAddress
+        ) on publicIpId
+        | project-away publicIpId, publicIpId1
+        | summarize privateIps = make_list(privateIp), publicIps = make_list(publicIp) by vmId
+    ) on vmId
+    | project-away vmId1
+    | sort by vmName asc
+//| where array_length(publicIps)>0
