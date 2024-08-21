@@ -1,0 +1,9 @@
+resources
+    | where type =~ 'microsoft.compute/virtualmachines'
+    | project vmId = tolower(tostring(id)), vmName = name
+    | join (resources
+        | where type =~ 'microsoft.network/networkinterfaces'
+        | mv-expand ipconfig=properties.ipConfigurations
+        | project vmId = tolower(tostring(properties.virtualMachine.id)), nicid=id,nicname = name, privateIp = ipconfig.properties.privateIPAddress
+            ) on vmId
+            | project-away vmId1
