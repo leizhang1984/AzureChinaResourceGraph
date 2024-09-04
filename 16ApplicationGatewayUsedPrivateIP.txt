@@ -1,0 +1,10 @@
+resources
+| project name, vnet = split(split(properties.gatewayIPConfigurations[0].properties.subnet.id,"virtualNetworks/")[1],"/subnets")[0],
+subnet = split(properties.gatewayIPConfigurations[0].properties.subnet.id,"subnets/")[1],type,
+maxinstance = properties.autoscaleConfiguration.maxCapacity
+| extend vnetsubnet = strcat(vnet,"/",subnet)
+| where type == 'microsoft.network/applicationgateways'
+| summarize usedipcount = sum(toint(maxinstance)) by tostring(vnetsubnet)
+| extend vnet = split(vnetsubnet,"/")[0], subnet = split(vnetsubnet,"/")[1]
+| project-away vnetsubnet
+| order by tostring(vnet), tostring(subnet) asc
