@@ -20,4 +20,4 @@ resources
 | project subscriptionId, subnetname1, subnetname= subnetname1.name, subnetid=tostring(subnetname1.id), subnetcidr = subnetname1.properties.addressPrefix
 ) on $left.subnetid == $right.subnetid
 | project subscriptionId, name,publicNetworkAccess,subnetname,subnetid,subnetcidr, aclip
-| where subscriptionId in~ ('')
+//| where subscriptionId in~ ('')

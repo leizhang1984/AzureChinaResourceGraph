@@ -15,4 +15,4 @@ Resources
     | project-away vmId1
     | sort by vmName asc
 //| where array_length(publicIps)>0
-| where privateIps contains "10.99.80.13" or privateIps contains "10.99.80.20"
+//| where privateIps contains "10.99.80.13" or privateIps contains "10.99.80.20"
