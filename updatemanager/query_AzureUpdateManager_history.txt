@@ -1,0 +1,25 @@
+
+//Already Patched
+patchinstallationresources
+//| join kind=leftouter (ResourceContainers | where type=='microsoft.resources/subscriptions' | project subscriptionName=name, subscriptionId) on subscriptionId
+| where type =~ "microsoft.compute/virtualmachines/patchinstallationresults/softwarepatches"
+| extend tmpvmname = split(id,"virtualMachines/")
+| extend vmname= split(tmpvmname[1],"/patchInstallationResults")[0]
+| where properties.lastModifiedDateTime > ago(30d)
+| where properties.installationState=='Installed'
+| project subscriptionId,resourceGroup,vmname,location,lastModifiedDateTime=datetime_utc_to_local(todatetime(properties.lastModifiedDateTime),'Asia/Shanghai'),
+updateState=tostring(properties.installationState),
+//rebootBehavior=properties.rebootBehavior,rebootRequired=properties.rebootRequired,
+patchName=properties.patchName
+//,kbId=properties.kbId
+| union
+(
+//Need To Patch
+patchassessmentresources
+//| join kind=leftouter (ResourceContainers | where type=='microsoft.resources/subscriptions' | project subscriptionName=name, subscriptionId) on subscriptionId
+| where type == "microsoft.compute/virtualmachines/patchassessmentresults/softwarepatches"
+| extend tmpvmname = split(id,"virtualMachines/")
+| extend vmname= split(tmpvmname[1],"/patchAssessmentResults")[0]
+| project subscriptionId,resourceGroup,vmname,location,lastModifiedDateTime=datetime_utc_to_local(todatetime(properties.lastModifiedDateTime),'Asia/Shanghai'),updateState=tostring("NotInstalled"),patchName=properties.patchName//,patchId=properties.patchId
+)
+| order by tostring(subscriptionId) asc, tostring(resourceGroup) asc, tostring(vmname) asc, tostring(patchName) asc
