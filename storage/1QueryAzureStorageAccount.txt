@@ -2,5 +2,7 @@ Resources
 | join kind=leftouter (ResourceContainers | where type=='microsoft.resources/subscriptions' | project subscriptionName=name, subscriptionId) on subscriptionId
 | where type=="microsoft.storage/storageaccounts"
 | project subscriptionId,subscriptionName,resourceGroup,name,kind,location,allowBlobPublicAccess=properties.allowBlobPublicAccess,
-skuName=sku.name,skuTier=sku.tier
+skuName=sku.name,skuTier=sku.tier,allowSharedKeyAccess=properties.allowSharedKeyAccess
 | sort by subscriptionId 
+//| where subscriptionId =='bba32ad2-4ac4-4bc3-8c34-ad8b2475d857'
+//| where allowSharedKeyAccess == 'true'
