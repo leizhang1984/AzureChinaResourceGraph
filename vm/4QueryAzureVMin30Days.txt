@@ -1,0 +1,9 @@
+Resources
+| join kind=leftouter (ResourceContainers | where type=='microsoft.resources/subscriptions' | project subscriptionName=name, subscriptionId) on subscriptionId
+| where type == 'microsoft.compute/virtualmachines'
+| extend create_time_chinatime =  datetime_utc_to_local(todatetime(properties.timeCreated),'Asia/Shanghai')
+
+| project subscriptionId,subscriptionName,create_time_chinatime,resourceGroup,name,type,location,vmsize=properties.hardwareProfile.vmSize
+
+| where create_time_chinatime > ago (30d)
+| order by create_time_chinatime asc

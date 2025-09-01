@@ -1,0 +1,6 @@
+resources
+| where type == "microsoft.compute/virtualmachines"
+//| where  name == 'jmsmx-pro-tikv-193'
+| project name,location,["zones"], vmssid=properties.virtualMachineScaleSet.id
+| where vmssid contains "jmsmx-pro-vmss-db"
+| where zones contains "3"

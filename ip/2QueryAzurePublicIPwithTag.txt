@@ -1,0 +1,6 @@
+Resources
+| join kind=leftouter (ResourceContainers | where type=='microsoft.resources/subscriptions' | project subscriptionName=name, subscriptionId) on subscriptionId
+| where type == "microsoft.network/publicipaddresses"
+| where subscriptionId =='bba32ad2-4ac4-4bc3-8c34-ad8b2475d857'
+| project subscriptionId,subscriptionName,resourceGroup,ipname=name,location,tags
+| sort by subscriptionId 

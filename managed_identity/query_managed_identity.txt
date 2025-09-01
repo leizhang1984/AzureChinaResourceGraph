@@ -1,0 +1,6 @@
+Resources
+| where type == 'microsoft.managedidentity/userassignedidentities'
+| extend principalId = tostring(properties.principalId)
+| project name,location, resourceGroup, subscriptionId,principalId
+| order by principalId asc
+
