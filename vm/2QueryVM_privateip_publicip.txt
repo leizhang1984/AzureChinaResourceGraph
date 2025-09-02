@@ -1,6 +1,6 @@
 Resources
 | where type =~ 'microsoft.compute/virtualmachines'
-| project vmId = tolower(tostring(id)), vmName = name, resourceGroup = resourceGroup
+| project subscriptionId, vmId = tolower(tostring(id)), vmName = name, resourceGroup = resourceGroup
 | join (Resources
     | where type =~ 'microsoft.network/networkinterfaces'
     | mv-expand ipconfig=properties.ipConfigurations
@@ -14,7 +14,7 @@ Resources
     | project-away publicIpId, publicIpId1
     | summarize privateIps = make_list(privateIp), publicIps = make_list(publicIp) by vmId
 ) on vmId
-| project vmId, vmName, resourceGroup, privateIps, publicIps
+| project subscriptionId, vmId, vmName, resourceGroup, privateIps, publicIps
 | sort by vmName asc
 // | where array_length(publicIps) > 0
 // | where privateIps contains "10.99.80.13" or privateIps contains "10.99.80.20"
